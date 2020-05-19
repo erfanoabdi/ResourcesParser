@@ -40,8 +40,18 @@ int main(int argc, char *argv[]) {
 	if (apk >= 0)
 	{
 		zip *z = zip_open(path, 0, &err);
-		zip_file *f = zip_fopen(z, "resources.arsc", 0);
-		parser.SetResourcesZip(f);
+        zip_int64_t idx;
+        if ((idx = zip_name_locate(z, "resources.arsc", 0)) < 0) {
+            zip_close(z);
+            return -1;
+        }
+        zip_source* rro_arsc_src = zip_source_zip(z, z, idx, 0, 0, 0);
+        if (zip_source_open(rro_arsc_src) < 0) {
+            zip_source_free(rro_arsc_src);
+            zip_close(z);
+            return -1;
+        }
+        parser.SetResourcesZip(rro_arsc_src);
 	} else {
 		FILE *stream = fopen(path, "rb");
 		parser.SetResourcesBin(stream);
